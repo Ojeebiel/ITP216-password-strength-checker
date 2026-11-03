@@ -1,42 +1,10 @@
 <?php
-session_start();
-
-// Database configuration
-$host = 'localhost';$db_user = 'root';
-$db_pass = '';$db_name = 'itp216_pt'; // Ensure this matches your actual database name
-
-$conn = new mysqli($host,$db_user, $db_pass,$db_name);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+// view/register.php - presentation only
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
-
-$message = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $password =$_POST['password'];
-
-    // Basic validation
-    if (!empty($name) && !empty($email) && !empty($password)) {
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
-
-        $stmt =$conn->prepare("INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $name, $email,$password_hash);
-
-        if ($stmt->execute()) {
-            $_SESSION['user_name'] =$name;
-            header("Location: dashboard.php");
-            exit();
-        } else {
-            $message = "Error: Email might already be registered.";
-        }
-        $stmt->close();
-    } else {
-        $message = "Please fill in all fields.";
-    }
-}
-$conn->close();
+$message = $_SESSION['flash_message'] ?? '';
+unset($_SESSION['flash_message']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -61,9 +29,9 @@ $conn->close();
 
 <div class="card">
     <h2>Create an Account</h2>
-    <?php if($message): ?><div class="msg"><?php echo $message; ?></div><?php endif; ?>
+    <?php if ($message): ?><div class="msg"><?php echo htmlspecialchars($message); ?></div><?php endif; ?>
     
-    <form method="POST" action="">
+    <form method="POST" action="../controllers/register-user.php">
         <label for="name">Full Name:</label>
         <input type="text" id="name" name="name" required placeholder="John Doe">
 
@@ -78,7 +46,7 @@ $conn->close();
 
         <button type="submit" id="submit-btn">Register</button>
     </form>
-    <p style="text-align: center; margin-top: 15px; font-size: 14px;">Already have an account? <a href="login.php">Log in</a></p>
+    <p style="text-align: center; margin-top: 15px; font-size: 14px;">Already have an account? <a href="../index.php">Log in</a></p>
 </div>
 
 <script>

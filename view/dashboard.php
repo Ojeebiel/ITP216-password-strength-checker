@@ -1,18 +1,13 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['user_name'])) {
-    header("Location: login.php");
+// view/dashboard.php - presentation only
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (empty($_SESSION['user_id'])) {
+    header("Location: ../index.php");
     exit();
 }
-
-// Handle logout
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header("Location: login.php");
-    exit();
-}
+$userName = $_SESSION['user_name'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,10 +31,10 @@ if (isset($_GET['logout'])) {
     <div class="success-banner">
         <strong>Success!</strong> You have securely logged in.
     </div>
-    <h2>Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</h2>
+    <h2>Welcome, <?php echo htmlspecialchars($userName); ?>!</h2>
     <p>Your authentication token and session variables have been established.</p>
     
-    <a href="?logout=true" class="btn-logout">Log Out</a>
+    <a href="../controllers/login-user.php?action=logout" class="btn-logout">Log Out</a>
 </div>
 
 </body>

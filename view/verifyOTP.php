@@ -1,39 +1,14 @@
 <?php
-session_start();
-if (!isset($_SESSION['temp_user_id'])) { header("Location: login.php"); exit(); }
-
-$conn = new mysqli('localhost', 'root', '', 'itp216_pt');
-$error = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $submitted_otp = $_POST['otp_code'];
-    $user_id = $_SESSION['temp_user_id'];
-    
-    $stmt = $conn->prepare("SELECT otp_code, expires_at FROM login_otp WHERE user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($row = $result->fetch_assoc()) {
-        if (strtotime($row['expires_at']) < time()) {
-            $error = "OTP has expired. Please log in again.";
-        } elseif (password_verify($submitted_otp, $row['otp_code'])) {
-            // Success! Clear temp data and establish real session
-            $_SESSION['user_id'] = $user_id;
-            $_SESSION['user_name'] = $_SESSION['temp_user_name'];
-            
-            unset($_SESSION['temp_user_id'], $_SESSION['temp_user_name']);
-            $conn->query("DELETE FROM login_otp WHERE user_id = $user_id");
-            
-            header("Location: dashboard.php");
-            exit();
-        } else {
-            $error = "Invalid OTP.";
-        }
-    } else {
-        $error = "No OTP requested.";
-    }
+// view/verifyOTP.php - presentation only
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
+if (empty($_SESSION['temp_user_id'])) {
+    header("Location: ../index.php");
+    exit();
+}
+$error = $_SESSION['flash_error'] ?? '';
+unset($_SESSION['flash_error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -61,12 +36,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <div class="msg"><?php echo htmlspecialchars($error); ?></div>
     
-    <form method="POST" action="">
+    <form method="POST" action="../controllers/verify-otp.php">
         <input type="text" name="otp_code" required pattern="\d{6}" maxlength="6" placeholder="000000" autocomplete="one-time-code" autofocus>
         <button type="submit">Verify Code</button>
     </form>
     
-    <p style="margin-top: 20px;"><a href="login.php">Cancel and return to Login</a></p>
+    <p style="margin-top: 20px;"><a href="../controllers/login-user.php?action=logout">Cancel and return to Login</a></p>
 </div>
 
 </body>
